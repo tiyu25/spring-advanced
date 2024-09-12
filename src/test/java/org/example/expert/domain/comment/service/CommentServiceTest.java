@@ -1,6 +1,7 @@
 package org.example.expert.domain.comment.service;
 
 import org.example.expert.domain.comment.dto.request.CommentSaveRequest;
+import org.example.expert.domain.comment.dto.response.CommentResponse;
 import org.example.expert.domain.comment.dto.response.CommentSaveResponse;
 import org.example.expert.domain.comment.entity.Comment;
 import org.example.expert.domain.comment.repository.CommentRepository;
@@ -16,7 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,5 +73,28 @@ class CommentServiceTest {
 
         // then
         assertNotNull(result);
+    }
+
+    @Test
+    public void 댓글_가져오기() {
+        // given
+        long todoId = 1L;
+        AuthUser authUser = new AuthUser(1L, "user@naver.com", UserRole.USER);
+        User user = User.fromAuthUser(authUser);
+
+        Comment comment = new Comment();
+        ReflectionTestUtils.setField(comment, "id", 1L);
+        ReflectionTestUtils.setField(comment, "contents", "내용");
+        ReflectionTestUtils.setField(comment, "user", user);
+
+        List<Comment> commentList = List.of(comment);
+        given(commentRepository.findByTodoIdWithUser(todoId)).willReturn(commentList);
+
+        List<CommentResponse> result = commentService.getComments(todoId);
+
+        assertEquals(1L, result.get(0).getUser().getId());
+        assertEquals("내용", result.get(0).getContents());
+        assertEquals("user@naver.com", result.get(0).getUser().getEmail());
+
     }
 }
